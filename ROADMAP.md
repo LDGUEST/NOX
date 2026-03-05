@@ -2,7 +2,7 @@
 
 ## v1.0 — Foundation (shipped)
 
-- [x] 29 skills across 7 categories (including `/nox:pentest` — autonomous pentesting)
+- [x] 28 skills across 6 categories
 - [x] Claude Code, Gemini CLI, and Codex CLI support
 - [x] Auto-installer with `--symlink`, `--claude-only`, `--gemini-only`, `--codex-only`
 - [x] GSD combo skills (`full-phase`, `quick-phase`)
@@ -11,11 +11,11 @@
 
 ---
 
-## v1.1 — Polish & Community
+## v1.1 — Polish & Community (in progress)
 
 - [ ] **Uninstall script** — `bash uninstall.sh` to cleanly remove all skills
-- [ ] **Update script** — `bash update.sh` or `install.sh --update` to pull latest and reinstall
-- [ ] **Version check** — skills report their version, warn if outdated
+- [x] **Update script** — `bash update.sh` or `/nox:update` from any CLI
+- [x] **Version check** — compares local commit hash against remote, shows new commits
 - [ ] **Skill validation** — `bash validate.sh` confirms all 3 CLI formats are in sync
 - [ ] **Contributing guide** — CONTRIBUTING.md with skill authoring standards
 - [ ] **Changelog** — CHANGELOG.md tracking releases

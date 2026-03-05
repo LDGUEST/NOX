@@ -3,7 +3,7 @@ List all available Nox skills. For each one, provide:
 - A one-line description of what it does
 - When to use it
 
-## Nox Skills Catalog (29 skills)
+## Nox Skills Catalog (30 skills)
 
 ### Pipelines
 | Skill | Description |
@@ -61,6 +61,11 @@ List all available Nox skills. For each one, provide:
 | `/nox:overwrite` | Context reset — purge stale assumptions, set new truth |
 | `/nox:error` | Root cause analysis with shared DEBUGGING.md integration |
 | `/nox:help-forge` | This catalog |
+
+### Meta
+| Skill | Description |
+|-------|-------------|
+| `/nox:update` | Check for updates and install latest skills from GitHub |
 
 ---
 Nox
