@@ -55,30 +55,38 @@ But when paired with [**GSD (Get Shit Done)**](https://github.com/get-shit-done-
 **`/nox:full-phase`** — Complete plan-to-ship pipeline
 > *"Build a Stripe subscription system with full quality gates"*
 
-Automates the entire development lifecycle in one command:
+Automates the entire development lifecycle in one command with 5 blocking quality gates:
 
 ```
-Plan ──► Architect ──► Clarify ──► Execute ──► Security ──► Commit ──► Deploy ──► Verify ──► Handoff
- GSD       Nox          Nox      GSD+Nox       Nox          Nox        Nox        GSD        Nox
+Plan → Architect → Clarify → Execute → Review → Security → Pentest → Deps → Perf → Commit → Deploy → Verify → Handoff
+ GSD      Nox        Nox     GSD+Nox     Nox       Nox        Nox      Nox    Nox     Nox      Nox      GSD       Nox
 ```
 
 The pipeline pauses for your approval at key decision points:
 - After architecture design — "Approve this design?"
-- After security scan — Critical findings block the deploy
+- After code review — Critical findings block the pipeline
+- After security scan — Critical OWASP findings block the pipeline
+- After pentest — Any exploited vulnerability blocks the pipeline
+- After deps check — Critical CVEs block the pipeline
 - After verification — Failures loop back to fix automatically
 
-Every task inside the pipeline gets TDD enforcement and code review. Nothing ships without passing the security gate.
+Every task inside the pipeline gets TDD enforcement. Nothing ships without passing all 5 gates.
 
 **`/nox:quick-phase`** — Lightweight plan-to-commit
 > *"Add an admin debug panel — skip the ceremony"*
 
-Same structure, minimal overhead. No TDD, no security scan, no deploy protocol. Just plan → build → sanity check → commit. For internal tools, prototypes, and experiments.
+Same structure, minimal overhead. Advisory review (warns but doesn't block), simplify check, critical CVE scan. No TDD, no security scan, no pentest, no deploy protocol. For internal tools, prototypes, and experiments.
+
+```
+Plan → Execute → Review (advisory) → Simplify → Deps (critical only) → Commit → Handoff
+```
 
 | | `/nox:full-phase` | `/nox:quick-phase` |
 |---|---|---|
 | **Use for** | Production features | Prototypes, internal tools |
-| **Quality gates** | TDD, review, security, deploy | Simplify check only |
-| **Speed** | Thorough | Fast |
+| **Quality gates** | TDD, review, security, pentest, deps, perf, deploy | Advisory review, simplify, critical CVE check |
+| **Blocking** | 5 gates can block the pipeline | Nothing blocks — warnings only |
+| **Speed** | Thorough — 13 steps | Fast — 7 steps |
 | **Requires GSD** | Optional (falls back to manual) | Optional |
 
 ---

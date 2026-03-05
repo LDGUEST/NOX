@@ -1,6 +1,6 @@
 Execute a complete plan-to-ship pipeline with quality gates at every step. This skill orchestrates both GSD and Nox commands into a single automated workflow.
 
-**Requires:** [GSD](https://github.com/get-shit-done-ai/gsd) installed alongside Nox for full functionality.
+**Requires:** [GSD](https://github.com/get-shit-done-ai/gsd) installed alongside Nox for full functionality. Works without GSD in manual mode.
 
 ## Pipeline
 
@@ -21,34 +21,83 @@ Run `/gsd:execute-phase` (or manual execution if GSD is not installed). During e
 - `/nox:review` — Auto-review after each file is modified
 - Flag any issues before moving to the next task
 
-### Step 5: Security Gate
-Run `/nox:security` on all changed files. If any **Critical** findings exist, **block the pipeline** and fix before continuing. High/Medium findings are logged as warnings.
+### Step 5: Code Review Gate
+Run `/nox:review` on ALL changed files as a final pass. This catches cross-file issues that per-task reviews miss.
+- **Critical findings** → block the pipeline, fix before continuing
+- **Warnings** → log but proceed
+- **Nits** → log for later, don't block
 
-### Step 6: Commit
+### Step 6: Security Gate (Static)
+Run `/nox:security` on all changed files — OWASP Top 10 static analysis.
+- **Critical findings** → **block the pipeline** and fix before continuing
+- **High/Medium** → logged as warnings
+
+### Step 7: Pentest Gate (Live Exploitation)
+Run `/nox:pentest` against the running application. This goes beyond static scanning — it attempts real exploits.
+- **Any EXPLOITED finding** → **block the pipeline**. Fix the vulnerability, re-run pentest on that category
+- **BLOCKED_BY_SECURITY** → log as hardened, proceed
+- **Skip condition:** If the app has no running server (CLI tools, libraries), skip this step
+
+### Step 8: Dependency Gate
+Run `/nox:deps` to check for vulnerable, outdated, or unmaintained dependencies.
+- **Critical CVEs** → **block the pipeline** and update/replace the package
+- **High CVEs** → warn, recommend update before deploy
+- **Outdated/unused** → log for cleanup, don't block
+
+### Step 9: Performance Gate
+Run `/nox:perf` on changed files and affected endpoints.
+- **Critical regressions** (N+1 queries, memory leaks, 10x bundle increase) → **block and fix**
+- **Moderate concerns** (missing indexes, large re-renders) → warn, don't block
+- **Skip condition:** If changes are docs-only or config-only, skip this step
+
+### Step 10: Commit
 Run `/nox:commit` to generate Conventional Commits messages for all changes. Stage and commit with proper messages.
 
-### Step 7: Deploy
+### Step 11: Deploy
 Run `/nox:deploy` with the full 5-step protocol: preflight → backup → deploy → verify → report.
 
-### Step 8: Verify
+### Step 12: Verify
 Run `/gsd:verify-work` against the original acceptance criteria. If verification fails, **loop back to Step 4** with the failing criteria as the new task.
 
-### Step 9: Handoff
-Run `/nox:handoff` to capture everything learned — bugs found, decisions made, patterns discovered.
+### Step 13: Handoff
+Run `/nox:handoff` to capture everything learned — bugs found, decisions made, patterns discovered, security findings resolved.
+
+## Pipeline Diagram
+
+```
+Plan → Architect → Clarify → Execute → Review → Security → Pentest → Deps → Perf → Commit → Deploy → Verify → Handoff
+ GSD      Nox        Nox     GSD+Nox     Nox       Nox        Nox      Nox    Nox     Nox      Nox      GSD       Nox
+                                          ▲                                                     │
+                                          └─────────────────── loop back on failure ────────────┘
+```
 
 ## Decision Points (where the pipeline pauses)
 
 - **After Step 2** — "Approve this architecture?"
 - **After Step 3** — Only if ambiguity was found
-- **After Step 5** — If Critical security findings exist
-- **After Step 8** — If UAT verification fails (loops back to fix)
+- **After Step 5** — If Critical review findings exist
+- **After Step 6** — If Critical security findings exist
+- **After Step 7** — If any vulnerability was successfully exploited
+- **After Step 8** — If Critical CVEs found in dependencies
+- **After Step 9** — If critical performance regressions detected
+- **After Step 12** — If UAT verification fails (loops back to fix)
+
+## Gate Summary
+
+| Gate | Skill | Blocks On | Skip When |
+|------|-------|-----------|-----------|
+| Code Review | `/nox:review` | Critical findings | Never |
+| Security (Static) | `/nox:security` | Critical OWASP findings | Never |
+| Pentest (Live) | `/nox:pentest` | Any EXPLOITED vulnerability | No running server |
+| Dependencies | `/nox:deps` | Critical CVEs | No package manager |
+| Performance | `/nox:perf` | Critical regressions | Docs/config-only changes |
 
 ## Without GSD
 
-This skill works without GSD installed. Steps 1, 4, and 8 fall back to manual equivalents:
+This skill works without GSD installed. Steps 1, 4, and 12 fall back to manual equivalents:
 - Step 1: Creates a task breakdown instead of a GSD plan
 - Step 4: Executes tasks sequentially instead of wave-based parallelization
-- Step 8: Asks you to manually verify instead of running GSD's UAT
+- Step 12: Asks you to manually verify instead of running GSD's UAT
 
 ---
 Nox
