@@ -1,14 +1,9 @@
----
-name: help-forge
-description: List all available Nox skills organized by category
----
-
 List all available Nox skills. For each one, provide:
 - The skill name (slash command)
 - A one-line description of what it does
 - When to use it
 
-## Nox Skills Catalog (29 skills)
+## Nox Skills Catalog (32 skills)
 
 ### Pipelines
 | Skill | Description |
@@ -49,6 +44,7 @@ List all available Nox skills. For each one, provide:
 | `/nox:deploy` | 5-step deploy protocol: preflight → backup → deploy → verify → report |
 | `/nox:push` | Push to production with platform auto-detection and retry logic |
 | `/nox:diagnose` | Cross-machine system health check and status report |
+| `/nox:monitorlive` | Real-time log monitoring — watches live traffic, surfaces errors and anomalies during testing |
 | `/nox:migrate` | Database migration generator — auto-detects ORM and framework |
 
 ### Security
@@ -66,6 +62,12 @@ List all available Nox skills. For each one, provide:
 | `/nox:overwrite` | Context reset — purge stale assumptions, set new truth |
 | `/nox:error` | Root cause analysis with shared DEBUGGING.md integration |
 | `/nox:help-forge` | This catalog |
+
+### Meta
+| Skill | Description |
+|-------|-------------|
+| `/nox:update` | Check for updates and install latest skills from GitHub |
+| `/nox:context` | Review and validate all AI context files (CLAUDE.md, MEMORY.md, etc.) |
 
 ---
 Nox

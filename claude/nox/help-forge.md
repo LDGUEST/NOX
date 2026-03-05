@@ -3,7 +3,7 @@ List all available Nox skills. For each one, provide:
 - A one-line description of what it does
 - When to use it
 
-## Nox Skills Catalog (31 skills)
+## Nox Skills Catalog (32 skills)
 
 ### Pipelines
 | Skill | Description |
@@ -44,6 +44,7 @@ List all available Nox skills. For each one, provide:
 | `/nox:deploy` | 5-step deploy protocol: preflight → backup → deploy → verify → report |
 | `/nox:push` | Push to production with platform auto-detection and retry logic |
 | `/nox:diagnose` | Cross-machine system health check and status report |
+| `/nox:monitorlive` | Real-time log monitoring — watches live traffic, surfaces errors and anomalies during testing |
 | `/nox:migrate` | Database migration generator — auto-detects ORM and framework |
 
 ### Security

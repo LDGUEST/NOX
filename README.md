@@ -4,7 +4,7 @@
 
 # Nox
 
-29 battle-tested slash commands for **Claude Code**, **Gemini CLI**, and **Codex CLI**. One install, three CLIs, zero config.
+32 battle-tested slash commands for **Claude Code**, **Gemini CLI**, and **Codex CLI**. One install, three CLIs, zero config.
 
 Built for developers running multiple AI agents across terminals, machines, and models — Nox gives every agent the same playbook for code quality, security, deployment, and coordination.
 
@@ -97,7 +97,7 @@ bash install.sh --gemini-only
 bash install.sh --codex-only
 ```
 
-Type `/nox` in Claude Code and all 29 skills appear — same UX as `/gsd`.
+Type `/nox` in Claude Code and all 32 skills appear — same UX as `/gsd`.
 
 ## Manual Install
 
@@ -118,7 +118,7 @@ cp -r codex/skills/* ~/.agents/skills/
 
 ---
 
-## Skill Catalog (29 skills)
+## Skill Catalog (32 skills)
 
 ### Pipelines
 
@@ -198,6 +198,9 @@ cp -r codex/skills/* ~/.agents/skills/
 **`/nox:diagnose`** — System health check
 > *"Check if all services are running"* — SSHs into configured machines, checks connectivity, CPU/memory/disk, Docker containers, GPU status, API endpoints. Returns a clean status table.
 
+**`/nox:monitorlive`** — Real-time log monitoring
+> *"Watch the logs while I test this"* — Auto-detects your log source (Vercel, Docker, PM2, systemd, log files), tails in real-time, and surfaces errors, slow requests, auth anomalies, and traffic patterns. Deduplicates noise, correlates incidents, suggests fixes inline.
+
 **`/nox:migrate`** — Database migration generator
 > *"Add a status column to the orders table"* — Auto-detects ORM (Prisma, Drizzle, Alembic, Django, Supabase), generates UP + DOWN migrations, warns about destructive operations and table locks.
 
@@ -276,14 +279,14 @@ NOX-AI-SKILLS/
 ├── install.sh                 # Auto-installer (Claude + Gemini + Codex)
 ├── claude/                    # Claude Code (/nox:<name>)
 │   └── nox/
-│       └── *.md               # 28 skill files
+│       └── *.md               # 32 skill files
 ├── gemini/                    # Gemini CLI
 │   ├── gemini-extension.json
 │   └── skills/
-│       └── <name>/SKILL.md    # 28 skill directories
+│       └── <name>/SKILL.md    # 32 skill directories
 └── codex/                     # Codex CLI
     └── skills/
-        └── <name>/SKILL.md    # 28 skill directories
+        └── <name>/SKILL.md    # 32 skill directories
 ```
 
 ## License
