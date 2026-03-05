@@ -3,7 +3,13 @@ List all available Nox skills. For each one, provide:
 - A one-line description of what it does
 - When to use it
 
-## Nox Skills Catalog (26 skills)
+## Nox Skills Catalog (29 skills)
+
+### Pipelines
+| Skill | Description |
+|-------|-------------|
+| `/nox:full-phase` | Complete plan-to-ship pipeline with quality gates at every step |
+| `/nox:quick-phase` | Lightweight plan-to-commit for prototypes and internal tools |
 
 ### Code Quality
 | Skill | Description |
@@ -44,6 +50,7 @@ List all available Nox skills. For each one, provide:
 | Skill | Description |
 |-------|-------------|
 | `/nox:security` | OWASP Top 10 focused security scan with remediation guidance |
+| `/nox:pentest` | Autonomous penetration test — white-box recon, 5-category exploitation, zero false positives |
 
 ### Multi-Agent & Session Management
 | Skill | Description |

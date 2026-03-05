@@ -15,7 +15,7 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-28 battle-tested slash commands for **Claude Code**, **Gemini CLI**, and **Codex CLI**. One install, three CLIs, zero config.
+29 battle-tested slash commands for **Claude Code**, **Gemini CLI**, and **Codex CLI**. One install, three CLIs, zero config.
 
 Built for developers running multiple AI agents across terminals, machines, and models — Nox gives every agent the same playbook for code quality, security, deployment, and coordination.
 
@@ -99,7 +99,7 @@ bash install.sh --gemini-only
 bash install.sh --codex-only
 ```
 
-Type `/nox` in Claude Code and all 28 skills appear — same UX as `/gsd`.
+Type `/nox` in Claude Code and all 29 skills appear — same UX as `/gsd`.
 
 ## Manual Install
 
@@ -120,7 +120,7 @@ cp -r codex/skills/* ~/.agents/skills/
 
 ---
 
-## Skill Catalog (28 skills)
+## Skill Catalog (29 skills)
 
 ### Pipelines
 
@@ -210,6 +210,9 @@ cp -r codex/skills/* ~/.agents/skills/
 **`/nox:security`** — OWASP Top 10 scan
 > *"Run a security scan before launch"* — Checks all 10 categories: broken access control, injection, XSS, CSRF, auth flaws, vulnerable dependencies, secret exposure, SSRF. Returns findings with severity and remediation steps.
 
+**`/nox:pentest`** — Autonomous penetration test
+> *"Pentest this app before we ship"* — 5-phase white-box assessment: code recon, attack surface mapping, vulnerability analysis across 5 categories (injection, XSS, auth, SSRF, authorization), live exploitation with proof-of-concept, and pentester-grade report. No Exploit, No Report — zero false positives.
+
 ---
 
 ### Multi-Agent & Session Management
@@ -230,7 +233,7 @@ cp -r codex/skills/* ~/.agents/skills/
 > *"Why is this crashing?"* — Checks DEBUGGING.md first (another agent may have solved it). Traces root cause, maps failure chain, provides fix, proposes a DEBUGGING.md entry so it never gets re-investigated.
 
 **`/nox:help-forge`** — Skill catalog
-> *"What Nox commands are available?"* — Lists all 28 skills organized by category.
+> *"What Nox commands are available?"* — Lists all 29 skills organized by category.
 
 ---
 
