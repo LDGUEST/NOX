@@ -2,7 +2,7 @@
 
 ## v1.0 — Foundation (shipped)
 
-- [x] 28 skills across 6 categories
+- [x] 29 skills across 7 categories (including `/nox:pentest` — autonomous pentesting)
 - [x] Claude Code, Gemini CLI, and Codex CLI support
 - [x] Auto-installer with `--symlink`, `--claude-only`, `--gemini-only`, `--codex-only`
 - [x] GSD combo skills (`full-phase`, `quick-phase`)

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
+# pipefail not supported in all bash versions (e.g., Windows Git Bash)
+(set -o pipefail 2>/dev/null) && set -o pipefail
 
 # Nox Installer — Claude Code + Gemini CLI + Codex CLI
 # Usage: bash install.sh [--claude-only | --gemini-only | --codex-only | --symlink]
