@@ -1,0 +1,34 @@
+---
+name: iterate
+description: Autonomous sub-agent execution with verification loop
+---
+
+Deploy specialized sub-agents for all required steps. Execute, verify against the goal, and recursively self-correct until the objective is 100% complete.
+
+## Execution Protocol
+
+1. **Decompose** — Break the objective into discrete, verifiable steps
+2. **Execute** — Complete each step, one at a time
+3. **Verify** — After each step, verify it meets the acceptance criteria
+4. **Self-correct** — If verification fails, diagnose and fix before proceeding
+
+## Verification Criteria
+
+After each step, confirm:
+- The change produces the expected output
+- No existing tests are broken
+- No regressions in related functionality
+- The change is consistent with the project's coding standards
+
+## Safety Guards
+
+- **Max iterations**: Do not attempt more than 10 correction cycles on a single step. If stuck after 10 attempts, halt and report the blocker.
+- **Rollback on failure**: If a fix introduces more problems than it solves, revert to the last known good state.
+- **Progress logging**: Log each step's status (pass/fail/skip) for the final report.
+
+## Completion
+
+Do not pause, ask for input, or terminate until the final objective is fully validated. When complete, provide a summary of all steps executed and their outcomes.
+
+---
+Nox
