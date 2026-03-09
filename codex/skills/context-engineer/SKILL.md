@@ -32,24 +32,13 @@ Scan for: CLAUDE.md, CLAUDE.local.md (deprecated — flag for migration), MEMORY
 Find all context files at project root, subdirectories, and global config. For each, record: path, line count, last modified, armor status, size category (lean/normal/heavy/bloated).
 
 ### Phase 2: Diagnostics
-Run structural and security checks on context files and (with `--codebase` or `--all`) the broader codebase.
+Run structural and security checks on context files and (with `--codebase` or `--all`) the broader codebase. See [references/DIAGNOSTICS.md](references/DIAGNOSTICS.md) for bash commands and output format.
 
-**Context file checks:**
-- ❌ **Circular references** — context files that reference each other in loops
-- ❌ **Missing references** — context files pointing to files/paths that don't exist
-- ⚠️ **Duplicate references** — same file/section referenced multiple times within or across context files
-- ⚠️ **Deep reference chains** — context file hierarchies deeper than 3 levels
-- 🔒 **Exposed secrets** — API keys, tokens, passwords in context files (worst-case: every AI reads them)
+**Context file checks:** ❌ Circular references, ❌ Missing references, ⚠️ Duplicate references, ⚠️ Deep chains (>3 levels), 🔒 Exposed secrets
 
-**Codebase checks (with `--codebase` or `--all`):**
-- ❌ **Circular imports** — source files importing each other in loops (build import graph, detect cycles)
-- ❌ **Missing import files** — imports pointing to files that don't exist (respect tsconfig paths, index files)
-- ⚠️ **Large files (>1MB)** — excluding .git, node_modules, .next, dist, build
-- ⚠️ **Deep import chains** — import hierarchies deeper than 5 levels
-- ⚠️ **Duplicate imports** — same module imported multiple times in a file
-- 🔒 **Security issues** — hardcoded secrets in source, .env not in .gitignore
+**Codebase checks (`--codebase`/`--all`):** ❌ Circular imports, ❌ Missing import files, ⚠️ Large files (>1MB), ⚠️ Deep import chains (>5), ⚠️ Duplicate imports, 🔒 Hardcoded secrets / .env not gitignored
 
-Diagnostic findings feed into health scoring as deductions: ❌ = -5 Accuracy, ⚠️ = -2 Bloat/Consistency, 🔒 = -10 Accuracy.
+Deductions: ❌ = -5 Accuracy, ⚠️ = -2 Bloat/Consistency, 🔒 = -10 Accuracy.
 
 ### Phase 3: Health Scoring (0-100)
 | Dimension | Weight | What it measures |
@@ -85,14 +74,14 @@ Check global pattern propagation, convention drift, orphaned memories, missing s
 
 ## Rules
 
-- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any global system context file** — READ-ONLY references for scoring only. Only modify project-scoped files. If global file exceeds 200 lines, flag bloat and suggest what to move — never add to it.
-- NEVER modify files without showing diff and getting confirmation
-- NEVER delete context entries — only update, archive, or flag
-- NEVER fabricate health scores — if unverifiable, score 0 and note why
-- Generate missing files from actual codebase analysis, not blind templates
-- Respect existing armor — LOCKED sections are off-limits
-- Armor questionnaire is mandatory for first-time armor
-- Use `[maybe stale]` when uncertain
+- Global system files (`~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`) are read-only — scoring and consistency checks only. If the global CLAUDE.md exceeds 200 lines, flag the bloat and suggest what to move; don't add to it.
+- Show the exact diff and confirm before modifying any file.
+- Archive or flag context entries rather than deleting — lost history can't be recovered.
+- Health scores must be verifiable. If a dimension can't be checked, score it 0 and say why.
+- Generate missing CLAUDE.md files from actual codebase analysis, not blank templates.
+- Respect existing armor — locked sections stay locked unless the user explicitly unlocks them.
+- The Phase 5 armor questionnaire is required for first-time armor — skipping produces headers that don't reflect what the user wants protected.
+- Use `[maybe stale]` when uncertain — silent removal is worse than a false positive.
 
 ---
 Nox

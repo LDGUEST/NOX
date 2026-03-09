@@ -189,15 +189,14 @@ Verification: all N files pass syntax/lint check
 
 ## Rules
 
-- NEVER remove existing PROTECTED headers — only add or strengthen them
-- NEVER armor test files unless the user specifically asks — tests should be easy to modify
-- Always read the file's git history before writing the "KNOWN BUG HISTORY" section
-- If a file has no bug history, write "No known incidents yet" — do NOT fabricate history
-- The safe modification protocol is as important as the protection itself — always include it
-- For context files (.md), ALWAYS ask which sections to lock vs leave mutable — don't assume
-- The `NOX-ARMOR` comment in markdown files must be a valid HTML comment on line 1
-- Armor headers should be informative, not intimidating — they're guardrails, not bureaucracy
-- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any other global system context file** — these are READ-ONLY references. Only modify project-scoped files (`./CLAUDE.md`, `./MEMORY.md`, `./DEBUGGING.md`). If the user asks you to modify a global file, explain why and redirect them to do it manually.
+- Don't remove or downgrade existing PROTECTED headers — armor only ever increases, never weakens.
+- Skip test files unless the user specifically asks. Tests need to be easy to change; locking them defeats the purpose.
+- Read the file's git history before writing the KNOWN BUG HISTORY section. Fabricated incidents destroy the credibility of the header.
+- The safe modification protocol matters as much as the protection header itself — a locked file with no guidance on how to safely change it just frustrates future agents.
+- For context files (.md), ask the user which sections to lock vs leave mutable. Assuming locks on the wrong sections creates more problems than it solves.
+- The NOX-ARMOR comment in markdown must be a valid HTML comment on line 1 — invalid syntax means Claude won't detect it as armored.
+- Armor headers are guardrails, not bureaucracy. Write them to be helpful, not intimidating.
+- Global system files (`~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`) are read-only. Only modify project-scoped files (`./CLAUDE.md`, `./MEMORY.md`, `./DEBUGGING.md`). If the user asks to modify a global file, explain why and redirect them to do it manually.
 
 ---
 Nox
