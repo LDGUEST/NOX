@@ -17,6 +17,7 @@ Discover, audit, and govern all AI context files across your projects. This skil
 - `--project <name>` — audit a specific project by name
 - `--fix` — auto-propose fixes (still asks confirmation before writing)
 - `--score-only` — just show the health dashboard, no remediation
+- `--codebase` — include codebase-level diagnostics (large files, import chains, security scan)
 
 ## Context File Registry
 
@@ -33,6 +34,7 @@ Scan for ALL of these file types at project root, subdirectories, and global con
 | `.windsurfrules` | Windsurf rules | — |
 | `.roomodes` | Roo Code mode definitions | — |
 | `copilot-instructions.md` | GitHub Copilot instructions | `.github/copilot-instructions.md` |
+| `CLAUDE.local.md` | Deprecated local overrides (flag for migration) | — |
 | `AGENTS.md` | Agent definitions | — |
 | `.claude/settings.json` | Claude Code project settings | `~/.claude/settings.json` |
 
@@ -61,7 +63,141 @@ For each file found, record:
 - Whether it has a `NOX-ARMOR` header (line 1 HTML comment or PROTECTED MODULE header)
 - File size category: lean (<50 lines), normal (50-150), heavy (150-250), bloated (>250)
 
-### Phase 2: Health Scoring
+### Phase 2: Diagnostics
+
+Run structural and security checks across discovered context files and (with `--codebase` or `--all`) the broader codebase.
+
+#### Context File Diagnostics
+
+**❌ Circular references** — context files that reference each other in loops:
+```bash
+# Extract all cross-references between context files (e.g., "see src/CLAUDE.md")
+# Build a reference graph and detect cycles
+# Example cycle: CLAUDE.md → src/CLAUDE.md → ../CLAUDE.md → CLAUDE.md
+grep -rn 'see \|refer to \|defined in \|→.*CLAUDE\|→.*MEMORY\|→.*DEBUGGING' \
+  CLAUDE.md */CLAUDE.md MEMORY.md DEBUGGING.md 2>/dev/null
+```
+
+**❌ Missing references** — context files that point to files or paths that don't exist:
+```bash
+# Extract all file paths mentioned in context files
+# Verify each referenced file/directory exists on disk
+# Flag: CLAUDE.md:45 references "src/api/CLAUDE.md" — file does not exist
+```
+
+**⚠️ Duplicate references** — same file, section, or instruction referenced multiple times:
+```bash
+# Within a single file: same path/section mentioned 2+ times
+# Across files: identical instructions duplicated in CLAUDE.md AND MEMORY.md
+# Flag but don't auto-remove — duplicates may be intentional
+```
+
+**⚠️ Deep reference chains** — context file hierarchies deeper than 3 levels:
+```bash
+# Trace: root CLAUDE.md → subdir/CLAUDE.md → subdir/sub/CLAUDE.md → ...
+# Chains deeper than 3 levels cause context dilution for AI agents
+find . -name "CLAUDE.md" -not -path './node_modules/*' -not -path './.git/*' | \
+  awk -F'/' '{print NF-1, $0}' | sort -rn
+```
+
+**🔒 Security issues in context files** — exposed secrets in AI-readable files:
+```bash
+# Context files are read by EVERY AI agent — leaked secrets here are worst-case
+# Scan for: API keys, tokens, passwords, connection strings, private keys
+grep -rn 'sk-\|pk_\|PRIVATE_KEY\|password.*=\|secret.*=\|Bearer \|-----BEGIN' \
+  CLAUDE.md */CLAUDE.md MEMORY.md DEBUGGING.md GEMINI.md 2>/dev/null
+```
+
+#### Codebase Diagnostics (with `--codebase` or `--all`)
+
+**⚠️ Large files (>1MB)** — files that bloat context or cause performance issues:
+```bash
+find . -type f -size +1M \
+  -not -path './.git/*' -not -path './node_modules/*' \
+  -not -path './.next/*' -not -path './dist/*' \
+  -not -path './build/*' -not -path './.vercel/*' \
+  -exec ls -lh {} \;
+```
+
+**❌ Circular imports** — source files that import each other in loops:
+```bash
+# For TypeScript/JavaScript projects:
+# Build import graph from import/require statements
+# Detect cycles: a.ts → b.ts → c.ts → a.ts
+# Use: grep -rn "^import\|require(" --include="*.ts" --include="*.tsx" --include="*.js"
+```
+
+**❌ Missing import files** — imports pointing to files that don't exist:
+```bash
+# Resolve each import path relative to the importing file
+# Flag: src/utils.ts:3 imports "./helpers" — file does not exist
+# Respect tsconfig paths, package.json exports, index files
+```
+
+**⚠️ Deep import chains** — import hierarchies deeper than 5 levels:
+```bash
+# Trace: page.tsx → component.tsx → hook.ts → util.ts → helper.ts → ...
+# Deep chains increase cognitive load and fragility
+# Report the longest chains and their depths
+```
+
+**⚠️ Duplicate imports** — same module imported multiple times in a file:
+```bash
+# Same module path imported on multiple lines
+# Different aliases for the same import
+# Mixed default/named imports that could be consolidated
+grep -rn "^import" --include="*.ts" --include="*.tsx" --include="*.js" | \
+  awk -F: '{file=$1; import=$3} seen[file,import]++'
+```
+
+**🔒 Security issues in codebase** — exposed secrets beyond context files:
+```bash
+# Scan source code for hardcoded secrets, API keys, passwords
+# Check: .env files not in .gitignore, secrets in committed code
+# Patterns: API_KEY=, SECRET=, password=, sk-, pk_live_, -----BEGIN
+grep -rn 'API_KEY\s*=\s*["\x27]\|SECRET\s*=\s*["\x27]\|password\s*=\s*["\x27]' \
+  --include="*.ts" --include="*.js" --include="*.py" --include="*.env*" \
+  -not -path './node_modules/*' -not -path './.git/*'
+# Also check: is .env in .gitignore?
+grep -q '\.env' .gitignore 2>/dev/null || echo "WARNING: .env not in .gitignore"
+```
+
+#### Diagnostic Output Format
+```
+Diagnostics
+━━━━━━━━━━━
+
+Context Files:
+  ❌ Circular references:    0 found
+  ❌ Missing references:     2 found
+     → CLAUDE.md:45 references "src/api/CLAUDE.md" — file does not exist
+     → MEMORY.md:12 references "DEBUGGING.md" — file does not exist
+  ⚠️ Duplicate references:   1 found
+     → "coding standards" referenced in both CLAUDE.md:30 and CLAUDE.md:88
+  ⚠️ Deep reference chains:  0 found
+  🔒 Exposed secrets:        1 found
+     → MEMORY.md:15 contains what appears to be an API key: "sk-..."
+
+Codebase (--codebase):
+  ❌ Circular imports:       1 found
+     → src/a.ts → src/b.ts → src/a.ts
+  ❌ Missing imports:        0 found
+  ⚠️ Large files (>1MB):     2 found
+     → data/seed.json (4.2MB)
+     → public/hero.png (1.8MB)
+  ⚠️ Deep import chains:     1 found (depth: 7)
+     → pages/dashboard.tsx → ... → lib/constants.ts
+  ⚠️ Duplicate imports:      3 found
+  🔒 Security issues:        1 found
+     → .env not listed in .gitignore
+```
+
+Diagnostic findings feed into Phase 3 Health Scoring as deductions:
+- Each ❌ finding: -5 from Accuracy
+- Each ⚠️ finding: -2 from Bloat or Consistency
+- Each 🔒 finding: -10 from Accuracy (security issues are critical)
+
+### Phase 3: Health Scoring
 
 Score each project on 6 dimensions (0-100 total):
 
@@ -69,12 +205,12 @@ Score each project on 6 dimensions (0-100 total):
 |-----------|--------|---------|
 | **Completeness** | 20 | Has CLAUDE.md (+10), MEMORY.md (+5), DEBUGGING.md (+3), other context file (+2) |
 | **Freshness** | 20 | All files modified within 30 days (+20), 30-90 days (+10), >90 days (+0). Deduct 5 per stale reference found. |
-| **Accuracy** | 20 | Tech stack in CLAUDE.md matches package.json/go.mod/Cargo.toml (+10). Env vars match .env.example or code (+5). File paths are valid (+5). |
+| **Accuracy** | 20 | Tech stack in CLAUDE.md matches package.json/go.mod/Cargo.toml (+10). Env vars match .env.example or code (+5). File paths are valid (+5). Deductions from Phase 2 diagnostics (❌ = -5, 🔒 = -10). |
 | **Protection** | 15 | CLAUDE.md has NOX-ARMOR (+8). MEMORY.md has armor (+4). Other protected files (+3). |
 | **Consistency** | 15 | Context patterns match global CLAUDE.md conventions (+8). No contradictions between files (+7). |
 | **Bloat** | 10 | All files under max-lines (+5). No duplicate entries across files (+3). No orphaned entries (+2). |
 
-### Phase 3: Report
+### Phase 4: Report
 
 Output the dashboard:
 
@@ -92,12 +228,17 @@ Foundry-Wealth-Group     61/100  D       [no armor] [wrong auth provider listed]
 
 Grade scale: A (90-100) B (80-89) C (70-79) D (60-69) F (<60)
 
+DIAGNOSTICS:
+  ❌ Circular references:  0    ❌ Missing references:   1
+  ⚠️ Large files (>1MB):   2    ⚠️ Deep chains:          0
+  ⚠️ Duplicate references: 1    🔒 Security issues:      0
+
 GLOBAL CONTEXT:
   ~/.claude/CLAUDE.md        — 180 lines — armored: NO — last modified: 2026-03-01
   ~/.claude/MEMORY.md        — 42 lines  — armored: NO — last modified: 2026-03-05
 ```
 
-### Phase 4: Armor Check
+### Phase 5: Armor Check
 
 For each context file WITHOUT a `NOX-ARMOR` header, run an interactive questionnaire:
 
@@ -119,7 +260,7 @@ For each context file WITHOUT a `NOX-ARMOR` header, run an interactive questionn
 
 After gathering answers, generate the appropriate armor header and section markers. Show the proposed changes and ask for confirmation before writing.
 
-### Phase 5: Remediation (if --fix or user requests)
+### Phase 6: Remediation (if --fix or user requests)
 
 For each issue found, propose the EXACT fix:
 
@@ -159,7 +300,7 @@ For each issue found, propose the EXACT fix:
   → Run armor questionnaire for this file? [y/n]
 ```
 
-### Phase 6: Cross-Project Sync Check (--all mode only)
+### Phase 7: Cross-Project Sync Check (--all mode only)
 
 When scanning all projects, also check:
 1. **Global propagation** — patterns in global CLAUDE.md that should exist in all project CLAUDE.md files (coding standards, env var naming, deployment workflow)
