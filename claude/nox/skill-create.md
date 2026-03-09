@@ -1,3 +1,8 @@
+---
+name: skill-create
+description: Create a new NOX skill in the correct format across Claude Code, Gemini CLI, and Codex CLI.
+---
+
 Create a new Nox skill in the correct format across all three CLIs (Claude Code, Gemini CLI, Codex CLI). This meta-skill ensures consistent structure, naming, and quality when expanding the Nox skill pack.
 
 ## When to Use

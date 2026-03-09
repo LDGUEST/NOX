@@ -1,3 +1,8 @@
+---
+name: guardrails
+description: Enforce NOX guardrails and safety protocols. Use to install cross-CLI hooks and protection rules.
+---
+
 
 # Nox Guardrails
 

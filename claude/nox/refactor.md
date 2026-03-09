@@ -1,3 +1,8 @@
+---
+name: refactor
+description: Targeted refactoring with a safety net — improves structure while guaranteeing identical behavior.
+---
+
 Perform a targeted refactoring with a safety net. The goal: improve code structure while guaranteeing identical behavior.
 
 **Guardrails Active:** [Nox Guardrails](/nox:guardrails) are enforced — secret scanning on all file writes, branch protection on commits, and test regression tracking.

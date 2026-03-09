@@ -1,3 +1,8 @@
+---
+name: questions
+description: Ask all clarifying questions before any implementation to remove ambiguity. Use before coding or architecture.
+---
+
 Review the current context. Before generating any code or solutions, ask every necessary clarifying question to remove all ambiguity. The goal: build it correctly in one shot instead of iterating through misunderstandings.
 
 ## When to Use

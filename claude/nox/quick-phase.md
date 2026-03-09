@@ -1,3 +1,8 @@
+---
+name: quick-phase
+description: Lightweight plan-to-commit pipeline without full quality gates — for prototypes and internal tools.
+---
+
 Execute a lightweight plan-to-commit pipeline without full quality gates. For internal tools, prototypes, or changes that don't need security scanning and pentesting.
 
 **Requires:** [GSD](https://github.com/get-shit-done-ai/gsd) installed alongside Nox for full functionality. Works without GSD in manual mode.

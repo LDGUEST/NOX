@@ -1,3 +1,8 @@
+---
+name: context-engineer
+description: Audit and govern all AI context files — health scoring, armor enforcement, bloat detection, cross-project drift. Never writes to global system files.
+---
+
 Discover, audit, and govern all AI context files across your projects. This skill goes beyond `/nox:context` (which validates a single project) — it enforces armor, scores health, detects cross-project drift, and asks the right questions to fill gaps. Built for solo developers juggling dozens of projects.
 
 ## When to Use
@@ -331,6 +336,8 @@ Next audit recommended: 2026-04-08 (30 days)
 
 ## Rules
 
+- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any global system context file** — these are READ-ONLY references for scoring and consistency checks only. Only modify project-scoped files (`./CLAUDE.md`, `./MEMORY.md`, `./DEBUGGING.md`). Direct the user to edit global files manually.
+- **Only SIMPLIFY the global `~/.claude/CLAUDE.md` when reviewing it** — if it exceeds 200 lines, flag which sections are bloated or could move to project-level files. Never add to it.
 - NEVER modify any file without showing the exact diff and getting confirmation
 - NEVER delete context file entries — only update, archive, or flag for review
 - NEVER fabricate health scores — if you can't verify a dimension, score it as 0 and note why

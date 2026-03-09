@@ -1,3 +1,8 @@
+---
+name: migrate
+description: Generate a database migration for a schema change. Auto-detects ORM and migration framework.
+---
+
 Generate a database migration for the requested schema change. Auto-detect the ORM and migration framework.
 
 ## Step 1: Detect Stack

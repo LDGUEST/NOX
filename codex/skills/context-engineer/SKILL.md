@@ -1,3 +1,8 @@
+---
+name: context-engineer
+description: Audit and govern all AI context files — health scoring, armor enforcement, bloat detection, cross-project drift. Never writes to global system files.
+---
+
 Discover, audit, and govern all AI context files across your projects. Goes beyond simple validation — enforces armor, scores health, detects cross-project drift, and asks the right questions to fill gaps. Built for solo developers juggling dozens of projects.
 
 ## When to Use
@@ -80,6 +85,7 @@ Check global pattern propagation, convention drift, orphaned memories, missing s
 
 ## Rules
 
+- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any global system context file** — READ-ONLY references for scoring only. Only modify project-scoped files. If global file exceeds 200 lines, flag bloat and suggest what to move — never add to it.
 - NEVER modify files without showing diff and getting confirmation
 - NEVER delete context entries — only update, archive, or flag
 - NEVER fabricate health scores — if unverifiable, score 0 and note why

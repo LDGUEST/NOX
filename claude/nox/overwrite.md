@@ -1,3 +1,8 @@
+---
+name: overwrite
+description: Treat latest input as absolute state update — overwrite conflicting previous context for a specific component.
+---
+
 Treat my latest input as an absolute state update. Overwrite and purge any conflicting previous context, rules, or architectural decisions we've discussed regarding this specific component.
 
 Do not stack this information on top of old data — this is the new, definitive source of truth.

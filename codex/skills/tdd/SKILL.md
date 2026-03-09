@@ -1,3 +1,8 @@
+---
+name: tdd
+description: Enforce Red-Green-Refactor TDD cycle — write failing test first, then implementation, then refactor. No skipping.
+---
+
 Enforce the Red-Green-Refactor cycle. No skipping steps. This skill also handles standalone test generation when invoked on existing code without a feature spec.
 
 **Guardrails Active:** [Nox Guardrails](/nox:guardrails) are enforced — secret scanning on all file writes, branch protection on commits, and test regression tracking.

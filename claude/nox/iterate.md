@@ -1,3 +1,8 @@
+---
+name: iterate
+description: Deploy sub-agents to execute and recursively self-correct until the objective is 100% complete.
+---
+
 Deploy specialized sub-agents for all required steps. Execute, verify against the goal, and recursively self-correct until the objective is 100% complete.
 
 **Guardrails Active:** All [Nox Guardrails](/nox:guardrails) are enforced — especially the agent limiter (max 10 sub-operations before progress check) and zero-regression test tracking.

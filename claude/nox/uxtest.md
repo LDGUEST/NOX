@@ -1,3 +1,8 @@
+---
+name: uxtest
+description: Comprehensive UX testing via Playwright — user journeys, responsive design, accessibility, interaction bugs.
+---
+
 Perform comprehensive interactive UX testing using Playwright. This goes far beyond screenshot checks — it simulates real user journeys, tests responsive behavior, validates accessibility, and catches interaction bugs that static analysis and unit tests miss entirely.
 
 ## When to Use

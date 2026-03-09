@@ -1,3 +1,8 @@
+---
+name: help-forge
+description: List all available NOX skills with descriptions and usage examples.
+---
+
 List all available Nox skills. For each one, provide:
 - The skill name (slash command)
 - A one-line description of what it does

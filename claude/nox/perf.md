@@ -1,3 +1,8 @@
+---
+name: perf
+description: Profile codebase for performance issues and propose concrete optimizations with impact estimates.
+---
+
 Profile the codebase for performance issues and propose concrete optimizations.
 
 ## Analysis Areas

@@ -1,3 +1,8 @@
+---
+name: scan
+description: Auto-detect project type and dispatch relevant NOX agents in parallel for a full codebase health check.
+---
+
 Auto-detect your project type and dispatch relevant NOX agents in parallel. Instead of memorizing which skills to run, just scan — NOX figures out what matters and tells you what it found.
 
 ## When to Use

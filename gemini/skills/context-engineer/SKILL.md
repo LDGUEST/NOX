@@ -100,6 +100,7 @@ Always show diff and confirm before any write.
 
 ## Rules
 
+- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any global system context file** — READ-ONLY references for scoring only. Only modify project-scoped files. If global file exceeds 200 lines, flag bloat and suggest what to move — never add to it.
 - NEVER modify files without showing diff and getting confirmation
 - NEVER delete context entries — only update, archive, or flag
 - NEVER fabricate health scores — if unverifiable, score 0 and note why

@@ -1,3 +1,8 @@
+---
+name: handoff
+description: End-of-session knowledge capture — preserve decisions, blockers, next steps, and context before closing.
+---
+
 This session is ending. Before we close, execute the full knowledge capture protocol:
 
 ## 1. Session Summary

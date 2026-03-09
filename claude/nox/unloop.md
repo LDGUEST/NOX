@@ -1,3 +1,8 @@
+---
+name: unloop
+description: Autonomous repair state — resolve all current issues without stopping until the system is functional.
+---
+
 You are entering an unattended autonomous repair state. Your singular goal is to resolve all current issues. When the user returns, the system must be functional.
 
 **Guardrails Active:** All [Nox Guardrails](/nox:guardrails) are enforced — especially the agent limiter (max 10 sub-operations before progress check) and zero-regression test tracking.

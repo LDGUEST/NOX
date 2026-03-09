@@ -1,3 +1,8 @@
+---
+name: push
+description: Push changes and monitor the deployment pipeline for failures.
+---
+
 Push the current changes and monitor the deployment. Follow this protocol:
 
 **Guardrails Active:** [Nox Guardrails](/nox:guardrails) are enforced — secret scanning on all file writes, branch protection on commits, and test regression tracking.

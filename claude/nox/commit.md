@@ -1,3 +1,8 @@
+---
+name: commit
+description: Generate a conventional commit message from currently staged changes.
+---
+
 Generate a commit message from the current staged changes. Follow Conventional Commits format.
 
 ## Process

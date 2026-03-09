@@ -1,3 +1,8 @@
+---
+name: update
+description: Check for NOX AI Skills updates and install them from the CLI.
+---
+
 Check for NOX AI Skills updates and install them from the CLI.
 
 ## Process

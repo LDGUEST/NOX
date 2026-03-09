@@ -1,3 +1,8 @@
+---
+name: full-phase
+description: Full plan-to-ship pipeline with quality gates — architecture, implementation, tests, security, deploy.
+---
+
 Execute a complete plan-to-ship pipeline with quality gates at every step. This skill orchestrates both GSD and Nox commands into a single automated workflow.
 
 **Requires:** [GSD](https://github.com/get-shit-done-ai/gsd) installed alongside Nox for full functionality. Works without GSD in manual mode.

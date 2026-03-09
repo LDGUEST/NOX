@@ -1,3 +1,8 @@
+---
+name: armor
+description: Add NOX-ARMOR protection headers to files and subsystems. Use when locking down battle-tested code against casual AI modification.
+---
+
 Add protection headers and safe-modification instructions to files and subsystems. Use when code is battle-tested and must not be casually modified by future agents or sessions.
 
 ## When to Use
@@ -192,6 +197,7 @@ Verification: all N files pass syntax/lint check
 - For context files (.md), ALWAYS ask which sections to lock vs leave mutable — don't assume
 - The `NOX-ARMOR` comment in markdown files must be a valid HTML comment on line 1
 - Armor headers should be informative, not intimidating — they're guardrails, not bureaucracy
+- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any other global system context file** — these are READ-ONLY references. Only modify project-scoped files (`./CLAUDE.md`, `./MEMORY.md`, `./DEBUGGING.md`). If the user asks you to modify a global file, explain why and redirect them to do it manually.
 
 ---
 Nox

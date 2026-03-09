@@ -1,3 +1,8 @@
+---
+name: changelog
+description: Generate CHANGELOG.md from git history in Keep a Changelog format.
+---
+
 Generate a CHANGELOG.md from git history. Follow Keep a Changelog format.
 
 ## Process

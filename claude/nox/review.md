@@ -1,3 +1,8 @@
+---
+name: review
+description: PR-style code review on current changes or specified files. Senior reviewer focused on shipping quality.
+---
+
 Perform a PR-style code review on the current changes or specified files. Act as a senior reviewer focused on shipping quality code.
 
 **Guardrails Active:** [Nox Guardrails](/nox:guardrails) are enforced — secret scanning on all file writes, branch protection on commits, and test regression tracking.

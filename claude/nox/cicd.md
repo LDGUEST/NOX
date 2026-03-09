@@ -1,3 +1,8 @@
+---
+name: cicd
+description: Generate a production-ready CI/CD workflow for this codebase.
+---
+
 Generate a production-ready CI/CD workflow for this codebase.
 
 ## Step 1: Auto-Detect Project

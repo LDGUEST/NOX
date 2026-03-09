@@ -82,6 +82,7 @@ Verification: all files pass
 - No bug history? Write "No known incidents yet" — do NOT fabricate
 - For context files, ALWAYS ask which sections to lock vs leave mutable
 - The `NOX-ARMOR` comment in markdown must be valid HTML comment on line 1
+- **NEVER write to `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.gemini/GEMINI.md`, or any global system context file** — READ-ONLY references only. Only modify project-scoped files (`./CLAUDE.md`, `./MEMORY.md`, `./DEBUGGING.md`).
 
 ---
 Nox
