@@ -78,11 +78,22 @@ if [ "$REMOVE_GEMINI" = true ]; then
 fi
 
 # ── Codex CLI ────────────────────────────────────────────────
+# Only remove Nox skill directories — ~/.codex/skills/ may contain non-Nox skills
+NOX_CODEX_SKILLS="architect armor audit brainstorm changelog cicd commit context-engineer deploy diagnose full-phase guardrails handoff help-forge iterate landing migrate monitorlive overwrite perf prompt push questions quick-phase refactor review scan security skill-create syncagents tdd unloop update uxtest"
 if [ "$REMOVE_CODEX" = true ]; then
   if [ -d "$CODEX_DEST" ]; then
-    count=$(find "$CODEX_DEST" -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
-    rm -rf "$CODEX_DEST"
-    echo "Removed $count Codex CLI skills from $CODEX_DEST/"
+    count=0
+    for skill in $NOX_CODEX_SKILLS; do
+      if [ -d "$CODEX_DEST/$skill" ]; then
+        rm -rf "$CODEX_DEST/$skill"
+        count=$((count + 1))
+      fi
+    done
+    if [ "$count" -gt 0 ]; then
+      echo "Removed $count Codex CLI skills from $CODEX_DEST/"
+    else
+      echo "No Nox skills found in $CODEX_DEST/"
+    fi
   else
     echo "No Codex CLI skills found at $CODEX_DEST/"
   fi
