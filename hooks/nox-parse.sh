@@ -1,36 +1,18 @@
 #!/bin/bash
-# nox-parse.sh — Lightweight JSON field extractor for NOX hooks
-# Replaces python3 JSON parsing with pure bash/sed for common fields.
-# Source this file, then call nox_field "field_name" "$INPUT"
+# nox-parse.sh — Compatibility wrapper for lib-json.sh
+# Legacy hooks may source this file. Delegates to lib-json.sh.
 #
-# Handles flat top-level fields only (session_id, cwd, tool_name, etc.)
-# For nested fields, falls back to python3.
-#
-# Performance: ~0.5ms vs ~80ms for python3 -c "import json..."
+# Usage: source nox-parse.sh; val=$(nox_field "key" "$INPUT")
+
+source "$(dirname "${BASH_SOURCE[0]}")/lib-json.sh"
 
 nox_field() {
-    local key="$1" input="$2"
-    # Fast path: extract "key":"value" or "key": "value" with sed
-    # Handles string values (most hook fields)
-    local val
-    val=$(echo "$input" | sed -n "s/.*\"${key}\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -1)
-    if [ -n "$val" ]; then
-        echo "$val"
-        return 0
-    fi
-    # Try numeric/boolean values
-    val=$(echo "$input" | sed -n "s/.*\"${key}\"[[:space:]]*:[[:space:]]*\([0-9.eE+\-]*\).*/\1/p" | head -1)
-    if [ -n "$val" ]; then
-        echo "$val"
-        return 0
-    fi
-    # Boolean true/false/null
-    val=$(echo "$input" | sed -n "s/.*\"${key}\"[[:space:]]*:[[:space:]]*\(true\|false\|null\).*/\1/p" | head -1)
-    echo "${val:-}"
+    # $1 = key, $2 = JSON string (note: reversed arg order from json_str)
+    json_str "$2" "$1"
 }
 
-# Extract nested field: nox_nested "parent.child" "$INPUT"
 nox_nested() {
+    # For nested fields, fall back to python3
     local path="$1" input="$2"
     python3 -c "
 import sys,json
