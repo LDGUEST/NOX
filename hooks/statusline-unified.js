@@ -175,7 +175,9 @@ process.stdin.on('end', () => {
     line2Parts.push(`${bar} ${pct}% ${barColor}${tokenDisplay}\x1b[0m ${warning}`);
     if (ghUser) line2Parts.push(`@${ghUser}`);
     if (task) line2Parts.push(`\x1b[1m${task}\x1b[0m`);
-    line2Parts.push(`Session: \$${sessionCostFmt} (\$${costPer1k}/1k)`);
+    // Session cost — pastel green (static color for Max/Pro subscribers)
+    // TODO: optional cost-aware coloring for API-only users (green < $1, yellow < $5, red $5+)
+    line2Parts.push(`\x1b[38;5;114mSession: \$${sessionCostFmt} (\$${costPer1k}/1k)\x1b[0m`);
 
     process.stdout.write(line1 + '\n' + line2Parts.join(' | '));
 

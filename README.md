@@ -2,6 +2,14 @@
 
 <img src="assets/nox-logo.png" alt="NOX" width="360">
 
+[![GitHub stars](https://img.shields.io/github/stars/LDGUEST/NOX?style=flat-square&color=yellow)](https://github.com/LDGUEST/NOX/stargazers)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Skills](https://img.shields.io/badge/skills-34-blueviolet?style=flat-square)](#skill-catalog-34-skills)
+[![Agents](https://img.shields.io/badge/agents-8-orange?style=flat-square)](#agents-8)
+[![Hooks](https://img.shields.io/badge/hooks-22-green?style=flat-square)](#hooks-22)
+[![CLIs](https://img.shields.io/badge/CLIs-Claude%20%7C%20Gemini%20%7C%20Codex-lightgrey?style=flat-square)](#quick-install)
+[![Zero Config](https://img.shields.io/badge/config-zero-brightgreen?style=flat-square)](#quick-install)
+
 </div>
 
 <table>
@@ -32,7 +40,7 @@
 
 # Nox
 
-34 skills + 8 agents + 19 hooks for **Claude Code**, **Gemini CLI**, and **Codex CLI**. One install, three CLIs, zero config.
+34 skills + 8 agents + 22 hooks for **Claude Code**, **Gemini CLI**, and **Codex CLI**. One install, three CLIs, zero config.
 
 Built for developers running multiple AI agents across terminals, machines, and models — Nox gives every agent the same playbook for code quality, security, deployment, and coordination.
 
@@ -316,11 +324,11 @@ In `/nox:full-phase`, 6 of these agents (all except prompt-auditor and monitor) 
 
 ---
 
-## Hooks (19)
+## Hooks (22)
 
 Opt-in Claude Code hooks that provide continuous passive protection across ALL Nox and GSD workflows. Install with `bash install.sh --with-hooks`.
 
-19 hooks across **8 hook events** — the most comprehensive hook suite available for Claude Code.
+22 hooks across **8 hook events** — the most comprehensive hook suite available for Claude Code.
 
 ### Safety & Protection
 
@@ -346,7 +354,9 @@ Opt-in Claude Code hooks that provide continuous passive protection across ALL N
 
 | Hook | Event | What It Does |
 |------|-------|-------------|
-| `auto-context` | SessionStart | Injects git branch, recent commits, TODO count, DEBUGGING.md highlights on every session start |
+| `auto-context` | SessionStart | Injects git branch, recent commits, TODO count, DEBUGGING.md highlights. Detects recovery playbooks from pre-compact handoff |
+| `context-monitor` | PostToolUse (all) | Two-stage context awareness: efficiency nudge at 65%, auto-generates recovery playbook scaffold at 83% with git state + agent-filled intent sections. Zero user intervention — agent keeps working through auto-compact |
+| `statusline-unified` | StatusLine | Color-coded statusline: project name, git branch, dirty count, context bar (green/yellow/red), token count, session cost. Writes bridge file for context-monitor |
 | `debug-reminder` | PostToolUse (Bash) | On failure: "check DEBUGGING.md before re-investigating" |
 | `compact-saver` | PreCompact | Saves a context checkpoint before compaction — branch, diff, recent files |
 | `memory-auto-save` | Stop | Reminds if bugs were fixed but DEBUGGING.md/MEMORY.md weren't updated |
@@ -359,6 +369,27 @@ Opt-in Claude Code hooks that provide continuous passive protection across ALL N
 | `notify-complete` | PostToolUse (Bash) | Desktop notification when commands take >60s (macOS/Linux) |
 | `agent-tracker` | SubagentStart | Tracks subagent spawns, alerts on runaway loops (>10 agents) |
 | `session-logger` | Stop | Logs session summaries — project, branch, files changed — for work history |
+
+### Context Awareness & Recovery
+
+The statusline and context monitor work together to keep agents productive through the entire context window — with zero user intervention.
+
+```
+0%                    50%              65%          83%     84-85%        100%
+│     Green "Good"     │  Yellow "Ok"   │  WARNING   │HANDOFF│auto-compact│
+│     full speed       │  full speed    │  be surgical│write  │ built-in   │
+│                      │                │            │playbook│ compactor  │
+└──────────────────────┴────────────────┴────────────┴───────┴────────────┘
+                                                         │         │
+                                                         ▼         ▼
+                                              .claude/checkpoints/  agent reads
+                                              continuation.md       playbook,
+                                              (git state +          continues
+                                               dead ends +          working
+                                               next action)
+```
+
+**Recovery Playbook** — At 83% context usage, the hook auto-captures git state (branch, diff, commits) into a scaffold file and tells the agent to fill in the high-value sections: the user's original request, what failed and why (dead ends), key decisions, and the literal next action. The agent keeps working. When auto-compact fires, the playbook survives on disk. Post-compact, the SessionStart hook detects it, the agent reads it, acts on it, and deletes it. No user intervention at any point.
 
 **Two-Layer Defense:** Hooks (Layer 1) run passively on every tool call. Agents (Layer 2) run at pipeline checkpoints. Together they catch issues both as they happen and in aggregate.
 
@@ -384,6 +415,8 @@ Especially critical during autonomous execution (`/nox:iterate`, `/nox:unloop`) 
 | `NOX_DRIFT_ALERT` | `500` | Lines changed before escalated drift alert |
 | `NOX_AGENT_LIMIT` | `10` | Max subagents before runaway loop warning |
 | `NOX_SKIP_*` | — | Set any `NOX_SKIP_<HOOK_NAME>=1` to disable individually |
+| `NOX_SKIP_COMPACT_SAVER` | `0` | Set to `1` to disable pre-compact checkpoint saves |
+| `NOX_COMPACT_DIR` | `.claude/checkpoints/` | Override checkpoint directory path |
 
 <details>
 <summary>Settings.json configuration (click to expand)</summary>
@@ -432,6 +465,7 @@ Add this to your `~/.claude/settings.json` under `"hooks"`:
     "PostToolUse": [
       {
         "hooks": [
+          {"type": "command", "command": "node ~/.claude/hooks/context-monitor.js"},
           {"type": "command", "command": "bash ~/.claude/hooks/cost-alert.sh"}
         ]
       },
@@ -475,6 +509,10 @@ Add this to your `~/.claude/settings.json` under `"hooks"`:
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node ~/.claude/hooks/statusline-unified.js"
   }
 }
 ```
@@ -534,7 +572,9 @@ NOX/
 ├── LICENSE                    # MIT
 ├── install.sh                 # Auto-installer (Claude + Gemini + Codex + Agents + Hooks)
 ├── hooks/                     # Claude Code hooks (opt-in with --with-hooks)
-│   ├── auto-context.sh        # SessionStart: inject project state
+│   ├── statusline-unified.js  # StatusLine: colored 2-line status with context bar
+│   ├── context-monitor.js     # PostToolUse: context awareness + recovery playbook
+│   ├── auto-context.sh        # SessionStart: inject project state + detect recovery playbook
 │   ├── prompt-guard.sh        # UserPromptSubmit: warn on vague/destructive prompts
 │   ├── destructive-guard.sh   # PreToolUse: block dangerous commands
 │   ├── commit-lint.sh         # PreToolUse: enforce Conventional Commits
