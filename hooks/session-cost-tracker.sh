@@ -123,6 +123,7 @@ HOOKS_ACTIVE=1
 # ── Git stats ──
 BRANCH="n/a"
 FILES_CHANGED=0
+COMMITS_THIS_SESSION=0
 if [ -n "$CWD" ] && [ -d "$CWD" ]; then
     cd "$CWD" 2>/dev/null || true
     if git rev-parse --git-dir >/dev/null 2>&1; then
@@ -130,7 +131,42 @@ if [ -n "$CWD" ] && [ -d "$CWD" ]; then
         FILES_CHANGED=$(git diff --name-only 2>/dev/null | wc -l | tr -d ' ')
         STAGED=$(git diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')
         FILES_CHANGED=$((FILES_CHANGED + STAGED))
+        # Count commits made in the last 4 hours (rough session window)
+        COMMITS_THIS_SESSION=$(git log --oneline --since="4 hours ago" 2>/dev/null | wc -l | tr -d ' ')
     fi
+fi
+
+# ── Session duration from transcript timestamps ──
+DURATION_MIN=0
+if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
+    DURATION_MIN=$(python3 -c "
+import json
+first_ts = last_ts = None
+with open('$TRANSCRIPT') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        try:
+            ts = json.loads(line).get('timestamp')
+            if ts:
+                if first_ts is None: first_ts = ts
+                last_ts = ts
+        except: continue
+if first_ts and last_ts:
+    # timestamps are ISO strings or epoch — try both
+    try:
+        diff = float(last_ts) - float(first_ts)
+        print(max(1, int(diff / 60)))
+    except (ValueError, TypeError):
+        from datetime import datetime
+        try:
+            t1 = datetime.fromisoformat(first_ts.replace('Z','+00:00'))
+            t2 = datetime.fromisoformat(last_ts.replace('Z','+00:00'))
+            print(max(1, int((t2-t1).total_seconds() / 60)))
+        except: print(0)
+else:
+    print(0)
+" 2>/dev/null || echo "0")
 fi
 
 # ── Tool call count from hook counter ──
@@ -194,6 +230,8 @@ CREATE_SQL="CREATE TABLE IF NOT EXISTS sessions (
     cost_per_1k REAL DEFAULT 0,
     tool_calls INTEGER DEFAULT 0,
     files_changed INTEGER DEFAULT 0,
+    commits INTEGER DEFAULT 0,
+    duration_min INTEGER DEFAULT 0,
     context_used_pct REAL DEFAULT 0,
     hooks_active INTEGER DEFAULT 1,
     skills_used TEXT DEFAULT '',
@@ -203,12 +241,13 @@ CREATE_SQL="CREATE TABLE IF NOT EXISTS sessions (
 INSERT_SQL="INSERT OR REPLACE INTO sessions
     (session_id, timestamp, machine, project, branch, model, session_cost, tokens_used,
      input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
-     cost_per_1k, tool_calls, files_changed, context_used_pct, hooks_active, skills_used)
+     cost_per_1k, tool_calls, files_changed, commits, duration_min,
+     context_used_pct, hooks_active, skills_used)
     VALUES
     ('$SESSION_ID', '$TIMESTAMP', '$MACHINE', '$PROJECT', '$BRANCH', '$MODEL', $SESSION_COST,
      $TOKENS_USED, $INPUT_TOKENS, $OUTPUT_TOKENS, $CACHE_READ, $CACHE_WRITE,
-     $COST_PER_1K, $TOOL_CALLS, $FILES_CHANGED, $CONTEXT_USED_PCT,
-     $HOOKS_ACTIVE, '$SKILLS_USED');"
+     $COST_PER_1K, $TOOL_CALLS, $FILES_CHANGED, $COMMITS_THIS_SESSION, $DURATION_MIN,
+     $CONTEXT_USED_PCT, $HOOKS_ACTIVE, '$SKILLS_USED');"
 
 CLEANUP_SQL="DELETE FROM sessions WHERE session_id NOT IN (SELECT session_id FROM sessions ORDER BY timestamp DESC LIMIT 1000);"
 

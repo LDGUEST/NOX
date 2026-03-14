@@ -3,6 +3,8 @@
 # Usage: bash nox-metrics.sh [summary|compare|recent|project|expensive|efficient]
 set -eu
 
+[ "${NOX_SKIP_ALL:-0}" = "1" ] && exit 0
+
 DB="${NOX_COST_DB:-$HOME/.claude/.nox_metrics.db}"
 
 if [ ! -f "$DB" ]; then
@@ -47,21 +49,63 @@ case "$CMD" in
     compare)
         echo "═══ NOX Hooks: ON vs OFF ═══"
         echo ""
+        echo "── Overview ──"
         sqlite3 -header -column "$DB" "
             SELECT
                 CASE hooks_active WHEN 1 THEN 'HOOKS ON' ELSE 'HOOKS OFF' END as mode,
                 COUNT(*) as sessions,
-                ROUND(AVG(session_cost), 4) as avg_cost,
                 ROUND(AVG(tokens_used), 0) as avg_tokens,
-                ROUND(AVG(input_tokens), 0) as avg_input,
                 ROUND(AVG(output_tokens), 0) as avg_output,
-                ROUND(AVG(cache_read_tokens), 0) as avg_cache_r,
-                ROUND(AVG(cost_per_1k), 4) as avg_per_1k,
                 ROUND(AVG(tool_calls), 0) as avg_tools,
-                ROUND(AVG(context_used_pct), 1) as avg_ctx_pct,
-                ROUND(AVG(files_changed), 1) as avg_files
+                ROUND(AVG(duration_min), 0) as avg_min,
+                ROUND(AVG(commits), 1) as avg_commits,
+                ROUND(AVG(context_used_pct), 1) as avg_ctx,
+                ROUND(AVG(files_changed), 1) as uncommitted
             FROM sessions
             GROUP BY hooks_active;
+        "
+        echo ""
+        echo "── Efficiency ──"
+        sqlite3 -header -column "$DB" "
+            SELECT
+                CASE hooks_active WHEN 1 THEN 'HOOKS ON' ELSE 'HOOKS OFF' END as mode,
+                COUNT(*) as n,
+                ROUND(AVG(CASE WHEN tool_calls > 0 THEN 1.0 * tokens_used / tool_calls ELSE 0 END), 0) as tok_per_tool,
+                ROUND(AVG(CASE WHEN duration_min > 0 THEN 1.0 * commits / duration_min * 60 ELSE 0 END), 1) as commits_per_hr,
+                ROUND(AVG(CASE WHEN duration_min > 0 THEN 1.0 * tokens_used / duration_min ELSE 0 END), 0) as tok_per_min
+            FROM sessions
+            WHERE tool_calls > 5
+            GROUP BY hooks_active;
+        "
+        echo ""
+        echo "── By session size ──"
+        sqlite3 -header -column "$DB" "
+            SELECT
+                CASE hooks_active WHEN 1 THEN 'ON' ELSE 'OFF' END as hooks,
+                CASE
+                    WHEN tool_calls < 50 THEN 'light(<50)'
+                    WHEN tool_calls < 150 THEN 'medium(50-150)'
+                    ELSE 'heavy(150+)'
+                END as size,
+                COUNT(*) as n,
+                ROUND(AVG(tokens_used), 0) as avg_tokens,
+                ROUND(AVG(context_used_pct), 1) as avg_ctx
+            FROM sessions
+            GROUP BY hooks_active, size
+            ORDER BY hooks, size;
+        "
+        echo ""
+        echo "── By machine ──"
+        sqlite3 -header -column "$DB" "
+            SELECT
+                COALESCE(machine, '?') as mach,
+                CASE hooks_active WHEN 1 THEN 'ON' ELSE 'OFF' END as hooks,
+                COUNT(*) as n,
+                ROUND(AVG(tokens_used), 0) as avg_tokens,
+                ROUND(AVG(tool_calls), 0) as avg_tools
+            FROM sessions
+            GROUP BY machine, hooks_active
+            ORDER BY machine, hooks_active;
         "
         echo ""
         HOOKS_ON=$(sqlite3 "$DB" "SELECT COUNT(*) FROM sessions WHERE hooks_active=1;")
@@ -70,7 +114,7 @@ case "$CMD" in
         if [ "$HOOKS_OFF" -lt 5 ] 2>/dev/null; then
             echo ""
             echo "Need more hooks-OFF sessions for meaningful comparison."
-            echo "Run a few sessions with NOX_SKIP_ALL=1 to build baseline data."
+            echo "Toggle off with: nh > 2 in launcher"
         fi
         ;;
 
