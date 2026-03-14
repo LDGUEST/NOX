@@ -177,10 +177,33 @@ if [ "$INSTALL_HOOKS" = true ] && [ -d "$HOOKS_SRC" ]; then
       hook_count=$((hook_count + 1))
     done
 
+    # Install JS hooks (statusline, context monitor)
+    for hook in "$HOOKS_SRC"/*.js; do
+      [ -f "$hook" ] || continue
+      name="$(basename "$hook")"
+      install_file "$hook" "$HOOKS_DEST/$name"
+      hook_count=$((hook_count + 1))
+    done
+
     echo "  -> $hook_count hooks installed to $HOOKS_DEST/"
 
-    # Wire hooks into settings.json if not already present
+    # Install Nox statusline if not already configured
     SETTINGS="$HOME/.claude/settings.json"
+    if [ -f "$SETTINGS" ]; then
+      if ! grep -q "statusline-unified" "$SETTINGS" 2>/dev/null; then
+        echo ""
+        echo "  Nox colored statusline is available but not yet wired."
+        echo "  Add this to your $SETTINGS:"
+        echo '  "statusLine": {'
+        echo '    "type": "command",'
+        echo "    \"command\": \"node \\\"$HOOKS_DEST/statusline-unified.js\\\"\""
+        echo '  }'
+      else
+        echo "  -> Nox statusline already configured"
+      fi
+    fi
+
+    # Wire hooks into settings.json if not already present
     if [ -f "$SETTINGS" ]; then
       # Check if nox hooks are already wired
       if ! grep -q "destructive-guard" "$SETTINGS" 2>/dev/null; then
