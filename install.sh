@@ -5,7 +5,7 @@ set -eu
 
 # Nox Installer — Claude Code + Gemini CLI + Codex CLI
 # Usage: bash install.sh [--claude-only | --gemini-only | --codex-only | --symlink]
-# One-liner: curl -fsSL https://raw.githubusercontent.com/LDGUEST/NOX/main/install.sh | bash
+# One-liner: curl -fsSL https://raw.githubusercontent.com/LDGUEST/NOX-CLI-ADD-ONS/main/install.sh | bash
 
 # ── Bootstrap: curl pipe detection ──────────────────────────────
 # When run via `curl ... | bash`, BASH_SOURCE is empty or /dev/stdin.
@@ -22,7 +22,7 @@ if [ -z "${BASH_SOURCE[0]:-}" ] || [ "${BASH_SOURCE[0]}" = "/dev/stdin" ] || [ "
     git -C "$NOX_HOME" pull --ff-only 2>/dev/null || git -C "$NOX_HOME" pull --rebase
   else
     echo "  -> Cloning to $NOX_HOME"
-    git clone https://github.com/LDGUEST/NOX.git "$NOX_HOME"
+    git clone https://github.com/LDGUEST/NOX-CLI-ADD-ONS.git "$NOX_HOME"
   fi
   exec bash "$NOX_HOME/install.sh" "$@"
 fi
@@ -216,10 +216,10 @@ if [ "$INSTALL_HOOKS" = true ] && [ -d "$HOOKS_SRC" ]; then
         echo ""
         echo "  To activate hooks, add them to $SETTINGS under \"hooks\"."
         echo "  Quick setup — paste the config from:"
-        echo "  https://github.com/LDGUEST/NOX#hooks-19"
+        echo "  https://github.com/LDGUEST/NOX-CLI-ADD-ONS#hooks-19"
       elif ! grep -q "auto-context" "$SETTINGS" 2>/dev/null; then
         echo "  -> Hooks partially wired — new hooks (v1.3) need settings.json update."
-        echo "  See: https://github.com/LDGUEST/NOX#hooks-19"
+        echo "  See: https://github.com/LDGUEST/NOX-CLI-ADD-ONS#hooks-19"
       else
         echo "  -> All hooks wired in $SETTINGS"
       fi

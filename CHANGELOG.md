@@ -67,7 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - **MCP server** — any MCP-compatible client (Claude Desktop, Cursor, etc.) can invoke Nox skills via 3 tools: `nox_list`, `nox_skill`, `nox_agent`
-- **One-liner curl install** — `curl -fsSL https://raw.githubusercontent.com/LDGUEST/NOX/main/install.sh | bash` clones to `~/.nox` and installs
+- **One-liner curl install** — `curl -fsSL https://raw.githubusercontent.com/LDGUEST/NOX-CLI-ADD-ONS/main/install.sh | bash` clones to `~/.nox` and installs
 - MCP server auto-registers in `~/.claude/.mcp.json` during install
 - GitHub topics: `claude-code`, `gemini-cli`, `codex-cli`, `ai-skills`, `developer-tools`, `devops`, `security`
 

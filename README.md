@@ -2,7 +2,7 @@
 
 <img src="assets/nox-logo.png" alt="NOX" width="360">
 
-[![GitHub stars](https://img.shields.io/github/stars/LDGUEST/NOX?style=flat-square&color=yellow)](https://github.com/LDGUEST/NOX/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/LDGUEST/NOX-CLI-ADD-ONS?style=flat-square&color=yellow)](https://github.com/LDGUEST/NOX-CLI-ADD-ONS/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.0.0-blue?style=flat-square)](CHANGELOG.md)
 [![Skills](https://img.shields.io/badge/skills-35-blueviolet?style=flat-square)](#skill-catalog-35-skills)
@@ -118,13 +118,13 @@ Plan → Execute → Visual Check → Review (advisory) → Review (complexity) 
 
 **One-liner** (recommended):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/LDGUEST/NOX/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/LDGUEST/NOX-CLI-ADD-ONS/main/install.sh | bash
 ```
 
 **Or clone manually:**
 ```bash
-git clone https://github.com/LDGUEST/NOX.git
-cd NOX
+git clone https://github.com/LDGUEST/NOX-CLI-ADD-ONS.git
+cd NOX-CLI-ADD-ONS
 bash install.sh              # Auto-detects installed CLIs
 bash install.sh --symlink    # Symlink mode — auto-updates on git pull
 ```

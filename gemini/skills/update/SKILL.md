@@ -13,7 +13,7 @@ Check for NOX AI Skills updates and install them from the CLI.
    - `$HOME/NOX`
    - The directory containing symlink targets in `$HOME/.claude/commands/nox/` (if symlinked)
    - On Windows: `%USERPROFILE%\.nox` or `%USERPROFILE%\.cursor\projects\NOX`
-   - If not found, offer to clone: `git clone https://github.com/LDGUEST/NOX.git $HOME/.nox`
+   - If not found, offer to clone: `git clone https://github.com/LDGUEST/NOX-CLI-ADD-ONS.git $HOME/.nox`
 
 2. **Check current version** — run from the repo directory:
    ```bash
