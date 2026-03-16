@@ -1,0 +1,5 @@
+{
+  "name": "nox",
+  "version": "3.0.0",
+  "description": "Nox — 30 core skills + 8 registry + 8 agents + 23 hooks for Claude Code, Gemini CLI, and Codex CLI"
+}

@@ -1,0 +1,23 @@
+# Project context files (per-machine, not for public repo)
+CLAUDE.md
+GEMINI.md
+MEMORY.md
+DEBUGGING.md
+
+# Planning
+.planning/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+mcp-server/node_modules/
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
