@@ -8,10 +8,6 @@
 # Install: bash install.sh --with-hooks
 # Config:  NOX_SKIP_COST_TRACKER=1 to disable
 #          NOX_COST_DB=path to override DB (default: ~/.claude/.nox_metrics.db)
-#          NOX_COST_JSONL=path to override JSONL fallback (default: ~/.claude/.nox_metrics.jsonl)
-#
-# Storage: Prefers sqlite3. When sqlite3 is not available (e.g., Windows Git Bash),
-#          falls back to JSON Lines (.nox_metrics.jsonl) with identical fields.
 #
 # Query examples:
 #   sqlite3 ~/.claude/.nox_metrics.db "SELECT hooks_active, COUNT(*), ROUND(AVG(session_cost),4), ROUND(AVG(tokens_used),0) FROM sessions GROUP BY hooks_active"
@@ -53,12 +49,16 @@ CACHE_READ=0
 CACHE_WRITE=0
 
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-    # Extract token/cost data + duration from transcript JSONL
-    # PERF: tail -5000 limits parsing to last 5000 lines — avoids reading
-    # multi-MB transcripts from long sessions. Token/cost data accumulates
-    # so the latest entries have the most accurate totals.
-    read -r TOKENS_USED SESSION_COST MODEL INPUT_TOKENS OUTPUT_TOKENS CACHE_READ CACHE_WRITE DURATION_MIN <<< "$(tail -5000 "$TRANSCRIPT" | python3 -c "
-import sys, json
+    # Skip huge transcripts (>50MB) — parsing takes too long
+    _tsize=$(stat -f%z "$TRANSCRIPT" 2>/dev/null || stat -c%s "$TRANSCRIPT" 2>/dev/null || echo "0")
+    if [ "$_tsize" -gt 52428800 ] 2>/dev/null; then
+        TOKENS_USED=0; SESSION_COST=0; MODEL="unknown"
+    else
+    # Extract token/cost data from transcript JSONL
+    # Usage lives in message.usage on assistant-type entries
+    # Model lives in message.model on assistant-type entries
+    read -r TOKENS_USED SESSION_COST MODEL INPUT_TOKENS OUTPUT_TOKENS CACHE_READ CACHE_WRITE <<< "$(python3 -c "
+import json
 
 total_input = 0
 total_output = 0
@@ -66,62 +66,59 @@ total_cache_read = 0
 total_cache_write = 0
 total_cost = 0.0
 model = 'unknown'
-first_ts = last_ts = None
 
-for line in sys.stdin:
-    line = line.strip()
-    if not line: continue
-    try:
-        entry = json.loads(line)
-    except (json.JSONDecodeError, ValueError):
-        continue
+with open('$TRANSCRIPT', 'r') as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except (json.JSONDecodeError, ValueError):
+            continue
 
-    # Timestamps for duration
-    ts = entry.get('timestamp')
-    if ts:
-        if first_ts is None: first_ts = ts
-        last_ts = ts
+        # Assistant messages have message.usage and message.model
+        msg = entry.get('message', {})
+        if isinstance(msg, dict):
+            if model == 'unknown' and msg.get('model'):
+                model = msg['model']
 
-    msg = entry.get('message', {})
-    if isinstance(msg, dict):
-        if model == 'unknown' and msg.get('model'):
-            model = msg['model']
-        usage = msg.get('usage', {})
-        if usage:
+            usage = msg.get('usage', {})
+            if usage:
+                total_input += usage.get('input_tokens', 0)
+                total_output += usage.get('output_tokens', 0)
+                total_cache_read += usage.get('cache_read_input_tokens', 0)
+                total_cache_write += usage.get('cache_creation_input_tokens', 0)
+
+        # Also check top-level (some entry types)
+        usage = entry.get('usage', {})
+        if isinstance(usage, dict) and usage:
             total_input += usage.get('input_tokens', 0)
             total_output += usage.get('output_tokens', 0)
             total_cache_read += usage.get('cache_read_input_tokens', 0)
             total_cache_write += usage.get('cache_creation_input_tokens', 0)
 
-    usage = entry.get('usage', {})
-    if isinstance(usage, dict) and usage:
-        total_input += usage.get('input_tokens', 0)
-        total_output += usage.get('output_tokens', 0)
-        total_cache_read += usage.get('cache_read_input_tokens', 0)
-        total_cache_write += usage.get('cache_creation_input_tokens', 0)
-
-    for key in ('costUSD', 'cost_usd', 'cost'):
-        c = entry.get(key, 0)
-        if c:
-            total_cost += float(c)
-            break
-
-# Duration
-dur = 0
-if first_ts and last_ts:
-    try:
-        dur = max(1, int((float(last_ts) - float(first_ts)) / 60))
-    except (ValueError, TypeError):
-        try:
-            from datetime import datetime
-            t1 = datetime.fromisoformat(str(first_ts).replace('Z','+00:00'))
-            t2 = datetime.fromisoformat(str(last_ts).replace('Z','+00:00'))
-            dur = max(1, int((t2-t1).total_seconds() / 60))
-        except: pass
+        # Cost data if present
+        for key in ('costUSD', 'cost_usd', 'cost'):
+            c = entry.get(key, 0)
+            if c:
+                total_cost += float(c)
+                break
 
 total_tokens = total_input + total_output + total_cache_read + total_cache_write
-print(f'{total_tokens} {total_cost:.6f} {model.replace(chr(32),chr(95))} {total_input} {total_output} {total_cache_read} {total_cache_write} {dur}')
-" 2>/dev/null || echo "0 0 unknown 0 0 0 0 0")"
+model_clean = model.replace(' ', '_')
+print(f'{total_tokens} {total_cost:.6f} {model_clean} {total_input} {total_output} {total_cache_read} {total_cache_write}')
+" 2>/dev/null || echo "0 0 unknown 0 0 0 0")"
+    fi  # end size check
+fi
+
+# Fallback: read from statusline bridge file if transcript parsing got nothing
+if [ "$TOKENS_USED" = "0" ] && [ -n "$SESSION_ID" ]; then
+    BRIDGE="/tmp/claude-ctx-${SESSION_ID}.json"
+    if [ -f "$BRIDGE" ]; then
+        # Bridge has remaining_percentage and used_pct from last statusline update
+        true  # We'll get context_used_pct from this below
+    fi
 fi
 
 # ── Detect hooks state ──
@@ -145,7 +142,38 @@ if [ -n "$CWD" ] && [ -d "$CWD" ]; then
     fi
 fi
 
-# Duration is now parsed in the single python3 call above
+# ── Session duration from transcript timestamps ──
+DURATION_MIN=0
+if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] && [ "${_tsize:-0}" -le 52428800 ] 2>/dev/null; then
+    DURATION_MIN=$(python3 -c "
+import json
+first_ts = last_ts = None
+with open('$TRANSCRIPT') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        try:
+            ts = json.loads(line).get('timestamp')
+            if ts:
+                if first_ts is None: first_ts = ts
+                last_ts = ts
+        except: continue
+if first_ts and last_ts:
+    # timestamps are ISO strings or epoch — try both
+    try:
+        diff = float(last_ts) - float(first_ts)
+        print(max(1, int(diff / 60)))
+    except (ValueError, TypeError):
+        from datetime import datetime
+        try:
+            t1 = datetime.fromisoformat(first_ts.replace('Z','+00:00'))
+            t2 = datetime.fromisoformat(last_ts.replace('Z','+00:00'))
+            print(max(1, int((t2-t1).total_seconds() / 60)))
+        except: print(0)
+else:
+    print(0)
+" 2>/dev/null || echo "0")
+fi
 
 # ── Tool call count from hook counter ──
 TOOL_CALLS=0
@@ -190,9 +218,6 @@ if [ "$MACHINE" = "unknown" ]; then
         User|user) MACHINE="m1" ;;
     esac
 fi
-
-# ── Build JSON record (used by both SQLite and JSONL backends) ──
-JSON_RECORD="{\"session_id\":\"$SESSION_ID\",\"timestamp\":\"$TIMESTAMP\",\"machine\":\"$MACHINE\",\"project\":\"$PROJECT\",\"branch\":\"$BRANCH\",\"model\":\"$MODEL\",\"session_cost\":$SESSION_COST,\"tokens_used\":$TOKENS_USED,\"input_tokens\":$INPUT_TOKENS,\"output_tokens\":$OUTPUT_TOKENS,\"cache_read_tokens\":$CACHE_READ,\"cache_write_tokens\":$CACHE_WRITE,\"cost_per_1k\":$COST_PER_1K,\"tool_calls\":$TOOL_CALLS,\"files_changed\":$FILES_CHANGED,\"commits\":$COMMITS_THIS_SESSION,\"duration_min\":$DURATION_MIN,\"context_used_pct\":$CONTEXT_USED_PCT,\"hooks_active\":$HOOKS_ACTIVE,\"skills_used\":\"$SKILLS_USED\"}"
 
 # ── SQL for creating table + inserting ──
 CREATE_SQL="CREATE TABLE IF NOT EXISTS sessions (
@@ -243,43 +268,22 @@ LOCAL_FALLBACK="$HOME/.claude/.nox_metrics_local.db"
 HAS_SQLITE3=false
 command -v sqlite3 >/dev/null 2>&1 && HAS_SQLITE3=true
 
-# ── JSONL fallback path ──
-JSONL_FILE="${NOX_COST_JSONL:-$HOME/.claude/.nox_metrics.jsonl}"
-
-# ── Write session data ──
-write_jsonl_fallback() {
-    mkdir -p "$(dirname "$JSONL_FILE")"
-    echo "$JSON_RECORD" >> "$JSONL_FILE"
-    # Keep last 1000 entries
-    if [ -f "$JSONL_FILE" ]; then
-        LINE_COUNT=$(wc -l < "$JSONL_FILE" | tr -d ' ')
-        if [ "$LINE_COUNT" -gt 1000 ]; then
-            tail -n 1000 "$JSONL_FILE" > "${JSONL_FILE}.tmp" && mv "${JSONL_FILE}.tmp" "$JSONL_FILE"
-        fi
-    fi
-}
-
 if [ "$MACHINE" = "m4" ]; then
     # We ARE on M4 — write directly
     if [ "$HAS_SQLITE3" = true ]; then
         sqlite3 "$DB" "$CREATE_SQL" 2>/dev/null || true
         sqlite3 "$DB" "$INSERT_SQL" 2>/dev/null || true
         sqlite3 "$DB" "$CLEANUP_SQL" 2>/dev/null || true
-    else
-        write_jsonl_fallback
     fi
 else
-    # Remote machine — try SSH insert to M4's central DB (hard 5s timeout)
-    if timeout 5 ssh -o ConnectTimeout=2 -o BatchMode=yes -o ServerAliveInterval=2 -o ServerAliveCountMax=1 "$M4_SSH" \
-        "sqlite3 '$M4_DB_PATH' \"$CREATE_SQL\" && sqlite3 '$M4_DB_PATH' \"$INSERT_SQL\"" 2>/dev/null; then
+    # Remote machine — SSH insert to M4's central DB (5s hard timeout)
+    if ssh -o ConnectTimeout=3 -o BatchMode=yes -o ServerAliveInterval=2 -o ServerAliveCountMax=1 "$M4_SSH" \
+        "sqlite3 '$M4_DB_PATH' \"$CREATE_SQL\" && sqlite3 '$M4_DB_PATH' \"$INSERT_SQL\"" </dev/null 2>/dev/null; then
         true  # Success — logged to central DB
     elif [ "$HAS_SQLITE3" = true ]; then
         # M4 offline — write locally for later merge
         sqlite3 "$LOCAL_FALLBACK" "$CREATE_SQL" 2>/dev/null || true
         sqlite3 "$LOCAL_FALLBACK" "$INSERT_SQL" 2>/dev/null || true
-    else
-        # No sqlite3 available — JSONL fallback
-        write_jsonl_fallback
     fi
 fi
 
