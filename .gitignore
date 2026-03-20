@@ -7,13 +7,21 @@ DEBUGGING.md
 # Planning
 .planning/
 .claude/
+.context/
+
+# Secrets / env
+.env
+.env.*
+*.pem
+*.key
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Dependencies
-mcp-server/node_modules/
+node_modules/
 
 # Editor
 *.swp
@@ -21,3 +29,9 @@ mcp-server/node_modules/
 *~
 .vscode/
 .idea/
+.cursor/
+
+# Logs / metrics
+*.log
+*.sqlite
+*.db
