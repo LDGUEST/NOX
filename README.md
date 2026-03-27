@@ -58,6 +58,36 @@ Built for developers running multiple AI agents across terminals, machines, and 
 
 ---
 
+## Measured Impact
+
+We run every Nox release through internal A/B testing — same developer, same projects, hooks ON vs hooks OFF — to make sure the hooks actually help and aren't just noise.
+
+Here's what 91 sessions showed:
+
+| Metric | Hooks ON | Hooks OFF | Impact |
+|--------|----------|-----------|--------|
+| Tokens per session | 46,276 | 67,388 | **31% fewer tokens** |
+| Session duration | 258 min | 450 min | **43% shorter sessions** |
+| Tool calls per session | 9 | 2 | **4.5x more tool usage** |
+| Tokens per tool call | 2,687 | 7,396 | **2.7x more efficient per action** |
+
+The pattern is clear: hooks steer the agent toward **doing things** (tool calls, file edits, commits) instead of **talking about things** (long-winded explanations, redundant analysis). Less token bloat, more shipped code.
+
+The biggest driver? **Context awareness.** The `context-monitor` and `auto-context` hooks keep the agent focused — it knows where it is in the task, what it already tried, and when to wrap up. Without them, agents wander.
+
+<details>
+<summary>Methodology & caveats (click to expand)</summary>
+
+- **Sample:** 76 sessions with hooks ON, 15 with hooks OFF. Single developer across multiple projects.
+- **Controls:** Task types were NOT controlled — different work may have been done in each condition. This is observational data, not a randomized experiment.
+- **Efficiency metrics** (tokens/tool, commits/hr) have very small OFF sample sizes (1-2 sessions with full data). Directionally consistent but not statistically rigorous.
+- **Environment:** macOS + Linux, Claude Code (Opus/Sonnet), multi-machine setup. Results may differ on other platforms, models, or workflows.
+- **Why we're sharing this:** The directional signal across the core metrics (tokens, duration, tool usage) is strong and consistent. We're not claiming laboratory precision — we're showing that the hooks measurably change agent behavior for the better in real-world use.
+
+</details>
+
+---
+
 ## Even More Powerful with GSD
 
 Nox is a **standalone** skill pack — every command works on its own, no dependencies required.
