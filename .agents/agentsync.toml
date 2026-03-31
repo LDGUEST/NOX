@@ -1,0 +1,34 @@
+# AgentSync Configuration — NOX
+source_dir = "."
+
+[gitignore]
+enabled = true
+marker = "AI Agent Symlinks"
+
+[agents.claude]
+enabled = true
+description = "Claude Code - Anthropic's AI coding assistant"
+
+[agents.claude.targets.instructions]
+source = "AGENTS.md"
+destination = "CLAUDE.md"
+type = "symlink"
+
+[agents.cursor]
+enabled = true
+description = "Cursor - AI code editor"
+
+[agents.copilot]
+enabled = false
+
+[agents.codex]
+enabled = false
+
+[agents.root]
+enabled = true
+description = "Root AGENTS.md"
+
+[agents.root.targets.agents]
+source = "AGENTS.md"
+destination = "AGENTS.md"
+type = "symlink"

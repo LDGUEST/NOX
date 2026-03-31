@@ -21,3 +21,15 @@ mcp-server/node_modules/
 *~
 .vscode/
 .idea/
+# START AI Agent Symlinks
+.agents/skills/*.bak
+.claude/commands/
+.claude/skills/
+.cursor/mcp.json
+.cursor/skills/
+.mcp.json
+AGENTS.md
+AGENTS.md.bak.*
+CLAUDE.md
+CLAUDE.md.bak.*
+# END AI Agent Symlinks

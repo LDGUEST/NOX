@@ -105,19 +105,36 @@ with open('$TRANSCRIPT', 'r') as f:
                 total_cost += float(c)
                 break
 
-total_tokens = total_input + total_output + total_cache_read + total_cache_write
+# tokens_used = input + output only (cache reads are re-sent context, not new work)
+total_tokens = total_input + total_output
 model_clean = model.replace(' ', '_')
 print(f'{total_tokens} {total_cost:.6f} {model_clean} {total_input} {total_output} {total_cache_read} {total_cache_write}')
 " 2>/dev/null || echo "0 0 unknown 0 0 0 0")"
     fi  # end size check
 fi
 
-# Fallback: read from statusline bridge file if transcript parsing got nothing
-if [ "$TOKENS_USED" = "0" ] && [ -n "$SESSION_ID" ]; then
-    BRIDGE="/tmp/claude-ctx-${SESSION_ID}.json"
-    if [ -f "$BRIDGE" ]; then
-        # Bridge has remaining_percentage and used_pct from last statusline update
-        true  # We'll get context_used_pct from this below
+# ── Calculate cost from token counts if transcript had no cost field ──
+# Pricing per 1M tokens (Max plan = free, but track equivalent cost)
+if [ "$SESSION_COST" = "0" ] || [ "$SESSION_COST" = "0.000000" ]; then
+    if [ "$INPUT_TOKENS" -gt 0 ] 2>/dev/null || [ "$OUTPUT_TOKENS" -gt 0 ] 2>/dev/null; then
+        SESSION_COST=$(python3 -c "
+input_t = $INPUT_TOKENS
+output_t = $OUTPUT_TOKENS
+cache_read = $CACHE_READ
+cache_write = $CACHE_WRITE
+model = '$MODEL'
+
+# Pricing per 1M tokens (Anthropic API rates)
+if 'opus' in model:
+    inp_rate, out_rate, cache_r, cache_w = 15.0, 75.0, 1.5, 18.75
+elif 'haiku' in model:
+    inp_rate, out_rate, cache_r, cache_w = 0.80, 4.0, 0.08, 1.0
+else:  # sonnet default
+    inp_rate, out_rate, cache_r, cache_w = 3.0, 15.0, 0.30, 3.75
+
+cost = (input_t * inp_rate + output_t * out_rate + cache_read * cache_r + cache_write * cache_w) / 1_000_000
+print(f'{cost:.6f}')
+" 2>/dev/null || echo "0")
     fi
 fi
 
@@ -205,17 +222,20 @@ fi
 
 # ── Detect which machine we're on ──
 MACHINE="unknown"
-case "$(hostname 2>/dev/null)" in
-    *Mac-Mini*|*m4*) MACHINE="m4" ;;
-    *DESKTOP*|*Admin*|*PC*) MACHINE="pc" ;;
-    *m1*|*Mac*) MACHINE="m1" ;;
+# Check user first (most reliable — hostname can be anything)
+case "$(whoami 2>/dev/null)" in
+    openclaw) MACHINE="m4" ;;
+    Admin|admin) MACHINE="pc" ;;
+    User|user) MACHINE="m1" ;;
+    macbook-neo) MACHINE="neo" ;;
 esac
-# Fallback: check by IP / user
+# Fallback: hostname patterns
 if [ "$MACHINE" = "unknown" ]; then
-    case "$(whoami 2>/dev/null)" in
-        openclaw) MACHINE="m4" ;;
-        Admin|admin) MACHINE="pc" ;;
-        User|user) MACHINE="m1" ;;
+    case "$(hostname 2>/dev/null)" in
+        *FWG*|*Mac*Mini*|*m4*) MACHINE="m4" ;;
+        *DESKTOP*|*Nox*Magnus*|*PC*) MACHINE="pc" ;;
+        *neo*|*macbook*) MACHINE="neo" ;;
+        *m1*) MACHINE="m1" ;;
     esac
 fi
 
